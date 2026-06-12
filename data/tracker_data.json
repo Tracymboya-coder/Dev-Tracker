@@ -16,7 +16,14 @@
                 "title": "Portfolio Web Layout",
                 "description": "Build front-end layout using HTML and CSS",
                 "due_date": "2026-06-25",
-                "tasks": []
+                "tasks": [
+                    {
+                        "task_id": 6,
+                        "title": "Fix CSS Grid margins",
+                        "assigned_to": "Alice Smith",
+                        "status": "Pending"
+                    }
+                ]
             },
             {
                 "project_id": 5,
@@ -81,6 +88,18 @@
     },
     {
         "user_id": 5,
+        "name": "Alice Smith",
+        "email": "alice@code.com",
+        "projects": []
+    },
+    {
+        "user_id": 6,
+        "name": "Alice Smith",
+        "email": "alice@code.com",
+        "projects": []
+    },
+    {
+        "user_id": 7,
         "name": "Alice Smith",
         "email": "alice@code.com",
         "projects": []
