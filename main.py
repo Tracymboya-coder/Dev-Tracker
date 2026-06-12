@@ -1,4 +1,5 @@
-# main.py
+
+
 import argparse
 from tabulate import tabulate
 from utils.storage import load_data, save_data
@@ -16,7 +17,7 @@ def main():
     cmd_user.add_argument("--name", required=True, help="User's name")
     cmd_user.add_argument("--email", required=True, help="User's email address")
 
-    # 2.  add-project
+    # 2. add-project
     cmd_proj = subparsers.add_parser("add-project", help="Assign a project to a user ID")
     cmd_proj.add_argument("--user-id", type=int, required=True, help="ID of the owner user")
     cmd_proj.add_argument("--title", required=True, help="Project title")
@@ -29,16 +30,24 @@ def main():
     cmd_task.add_argument("--title", required=True, help="Task title")
     cmd_task.add_argument("--assign", required=True, help="Name of person assigned")
 
-    # 4.  complete-task
+    # 4. complete-task
     cmd_comp = subparsers.add_parser("complete-task", help="Set a task status to Completed")
-    cmd_comp.add_argument("--task-id", type=int, required=True, help="ID of target task item")
+    cmd_comp.add_argument("--task-id", type=int, required=True, help="ID of target task to mark as completed")
 
-    # 5.  list
+    # 5. list
     subparsers.add_parser("list", help="Display all structural logs")
 
-    args = parser.parse_args()
+    # 6. delete commands
+    del_user_parser = subparsers.add_parser("delete-user", help="Completely remove a user profile")
+    del_user_parser.add_argument("--user-id", type=int, required=True, help="The ID of the user to remove")
 
-   #Routing for top-level commands with basic error handling and success messages
+    del_proj_parser = subparsers.add_parser("delete-project", help="Remove a project milestone")
+    del_proj_parser.add_argument("--project-id", type=int, required=True, help="The ID of the project to remove")
+
+    del_task_parser = subparsers.add_parser("delete-task", help="Remove a single task line")
+    del_task_parser.add_argument("--task-id", type=int, required=True, help="The ID of the task to remove")
+
+    args = parser.parse_args()
 
     if args.command == "add-user":
         new_user = User(args.name, args.email)
@@ -52,7 +61,7 @@ def main():
             if u.user_id == args.user_id:
                 found_user = u
                 break
-        
+
         if found_user is not None:
             new_project = Project(args.title, args.desc, args.due)
             found_user.projects.append(new_project)
@@ -68,7 +77,7 @@ def main():
                 if p.project_id == args.project_id:
                     found_project = p
                     break
-        
+
         if found_project is not None:
             new_task = Task(args.title, args.assign)
             found_project.tasks.append(new_task)
@@ -83,11 +92,11 @@ def main():
             for p in u.projects:
                 for t in p.tasks:
                     if t.task_id == args.task_id:
-                        t.status = "Completed"  # Fires our encapsulation validation c
+                        t.status = "Completed"
                         task_found = True
                         break
-        
-        if task_found == True:
+
+        if task_found:
             save_data(users)
             print(f"Success: Task item {args.task_id} marked as Completed.")
         else:
@@ -99,12 +108,53 @@ def main():
             for p in u.projects:
                 for t in p.tasks:
                     rows.append([u.name, u.email, p.title, p.due_date, t.title, t.assigned_to, t.status, t.task_id])
-                    
+
         if len(rows) == 0:
             print("The project system database is completely empty.")
         else:
             headers = ["User", "Email", "Project Title", "Due Date", "Task Title", "Assigned Contributor", "Status", "Task ID"]
             print(tabulate(rows, headers=headers, tablefmt="grid"))
+
+    elif args.command == "delete-user":
+        updated_users = [u for u in users if u.user_id != args.user_id]
+
+        if len(updated_users) == len(users):
+            print(f" Error: User ID {args.user_id} not found.")
+        else:
+            users = updated_users
+            save_data(users)
+            print(f"User ID {args.user_id} and all their data removed successfully.")
+
+    elif args.command == "delete-project":
+        project_found = False
+        for user in users:
+            updated_projects = [p for p in user.projects if p.project_id != args.project_id]
+            if len(updated_projects) < len(user.projects):
+                user.projects = updated_projects
+                project_found = True
+                break
+
+        if project_found:
+            save_data(users)
+            print(f" Project ID {args.project_id} removed successfully.")
+        else:
+            print(f" Error: Project ID {args.project_id} not found.")
+
+    elif args.command == "delete-task":
+        task_found = False
+        for u in users:
+            for p in u.projects:
+                updated_tasks = [t for t in p.tasks if t.task_id != args.task_id]
+                if len(updated_tasks) < len(p.tasks):
+                    p.tasks = updated_tasks
+                    task_found = True
+                    break
+
+        if task_found:
+            save_data(users)
+            print(f" Task ID {args.task_id} removed successfully.")
+        else:
+            print(f"Error: Task ID {args.task_id} not found.")
 
 if __name__ == "__main__":
     main()
